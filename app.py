@@ -324,6 +324,7 @@ class InstagramManagerApp:
             if region == "cell":
                 column = tree.identify_column(event.x)
                 if column == "#3":
+                    item = tree.identify_row(event.y)
                     url = tree.item(item, "values")[2]
                     if url:
                         webbrowser.open(url)
