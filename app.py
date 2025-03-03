@@ -154,9 +154,10 @@ class InstagramDataParser:
                 if username:
                     results.append({
                         "username": username,
+                        "url": username_elements[i]['href'] if 'href' in username_elements[i].attrs
+                                else f"https://www.instagram.com/{username}/",
                         "timestamp": date_str
                     })
-            
             return results
         except Exception as e:
             print(f"Error parsing HTML file {file_path}: {e}")
@@ -286,18 +287,21 @@ class InstagramManagerApp:
         ttk.Label(self.requests_frame, text="Pending Follow Requests", style="Subheader.TLabel").grid(row=0, column=0, sticky=tk.W, pady=(0, 10), columnspan=3)
         
         # Create Treeview for follow requests
-        columns = ("Username", "Date", "Actions")
+        columns = ("Username", "Date", "URL", "Actions")
         tree = ttk.Treeview(self.requests_frame, columns=columns, show="headings", height=15)
         
         tree.heading("Username", text="Username")
         tree.heading("Date", text="Date Requested")
+        tree.heading("URL", text="Profile URL")
         tree.heading("Actions", text="Actions")
         
         tree.column("Username", width=200)
         tree.column("Date", width=200)
+        tree.column("URL", width=250)
         tree.column("Actions", width=150)
         
         tree.grid(row=1, column=0, columnspan=3, sticky="nsew", pady=10)
+        tree.grid(row=1, column=0, columnspan=4, sticky="nsew", pady=10)
         
         # Add a scrollbar
         scrollbar = ttk.Scrollbar(self.requests_frame, orient=tk.VERTICAL, command=tree.yview)
@@ -316,7 +320,7 @@ class InstagramManagerApp:
         
         # Populate treeview with follow requests
         for i, request in enumerate(self.data_parser.follow_requests):
-            tree.insert("", "end", values=(request["username"], request["timestamp"], "Remove"))
+            tree.insert("", "end", values=(request["username"], request["timestamp"], request["url"], "Remove"))
     
     def update_non_followers_tab(self):
         """Update the non-followers tab with data"""
@@ -328,16 +332,18 @@ class InstagramManagerApp:
         ttk.Label(self.non_followers_frame, text="Users You Follow Who Don't Follow You Back", style="Subheader.TLabel").grid(row=0, column=0, sticky=tk.W, pady=(0, 10), columnspan=3)
         
         # Create Treeview for non-followers
-        columns = ("Username", "Actions")
+        columns = ("Username", "URL", "Actions")
         tree = ttk.Treeview(self.non_followers_frame, columns=columns, show="headings", height=15)
         
         tree.heading("Username", text="Username")
+        tree.heading("URL", text="Profile URL")
         tree.heading("Actions", text="Actions")
         
-        tree.column("Username", width=300)
+        tree.column("Username", width=200)
+        tree.column("URL", width=250)
         tree.column("Actions", width=150)
         
-        tree.grid(row=1, column=0, columnspan=3, sticky="nsew", pady=10)
+        tree.grid(row=1, column=0, columnspan=4, sticky="nsew", pady=10)
         
         # Add a scrollbar
         scrollbar = ttk.Scrollbar(self.non_followers_frame, orient=tk.VERTICAL, command=tree.yview)
@@ -356,7 +362,7 @@ class InstagramManagerApp:
         
         # Populate treeview with non-followers
         for i, user in enumerate(self.data_parser.non_followers):
-            tree.insert("", "end", values=(user["username"], "Unfollow"))
+            tree.insert("", "end", values=(user["username"], user["url"], "Unfollow"))
     
     def browse_zip(self):
         """Browse for Instagram data zip file"""
