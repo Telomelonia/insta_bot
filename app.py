@@ -2,7 +2,7 @@ import sys
 import os
 import json
 import zipfile
-import tkinter as tk
+import tkinter as tk, webbrowser
 from tkinter import ttk, filedialog, messagebox
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -318,6 +318,20 @@ class InstagramManagerApp:
         self.requests_frame.grid_columnconfigure(1, weight=1)
         self.requests_frame.grid_columnconfigure(2, weight=1)
         
+        #Add binding for clickable URL
+        def on_treeview_click(event):
+            region = tree.identify_region(event.x, event.y)
+            if region == "cell":
+                column = tree.identify_column(event.x)
+                if column == "#3":
+                    url = tree.item(item, "values")[2]
+                    if url:
+                        webbrowser.open(url)
+                        self.status_var.set(f"Opening {url}")
+                    else:
+                        self.status_var.set("No URL available")
+        tree.bind("<ButtonRelease-1>", on_treeview_click)
+
         # Populate treeview with follow requests
         for i, request in enumerate(self.data_parser.follow_requests):
             tree.insert("", "end", values=(request["username"], request["timestamp"], request["url"], "Remove"))
@@ -359,6 +373,21 @@ class InstagramManagerApp:
         self.non_followers_frame.grid_columnconfigure(0, weight=1)
         self.non_followers_frame.grid_columnconfigure(1, weight=1)
         self.non_followers_frame.grid_columnconfigure(2, weight=1)
+        # Add binding for clickable URL in non-followers tab
+        def on_nonfollowers_treeview_click(event):
+            region = tree.identify_region(event.x, event.y)
+            if region == "cell":
+                column = tree.identify_column(event.x)
+                if column == "#2":  # URL column is the 2nd column
+                    item = tree.identify_row(event.y)
+                    url = tree.item(item, "values")[1]
+                    if url:
+                        webbrowser.open(url)
+                        self.status_var.set(f"Opening {url}")
+                    else:
+                        self.status_var.set("No URL available")
+        
+        tree.bind("<ButtonRelease-1>", on_nonfollowers_treeview_click)
         
         # Populate treeview with non-followers
         for i, user in enumerate(self.data_parser.non_followers):
@@ -540,7 +569,7 @@ class InstagramManagerApp:
                 item = items[index]
                 username = tree.item(item, "values")[0]
                 
-                self.status_var.set(f"Removing request {index+1}/{total}: {username}")
+                self.status_var.set(f"Removing request {index1}/{total}: {username}")
                 self.progress_var.set((index/total) * 100)
                 
                 success = self.bot.remove_follow_request(username)
@@ -548,7 +577,7 @@ class InstagramManagerApp:
                     tree.delete(item)
                 
                 # Process next item after a delay
-                self.root.after(1000, lambda: _process_batch(items, index+1))
+                self.root.after(1000, lambda: _process_batch(items, index1))
             
             threading.Thread(target=lambda: _process_batch(items), daemon=True).start()
     
@@ -601,7 +630,7 @@ class InstagramManagerApp:
                 item = items[index]
                 username = tree.item(item, "values")[0]
                 
-                self.status_var.set(f"Unfollowing {index+1}/{total}: {username}")
+                self.status_var.set(f"Unfollowing {index1}/{total}: {username}")
                 self.progress_var.set((index/total) * 100)
                 
                 success = self.bot.unfollow_user(username)
@@ -609,7 +638,7 @@ class InstagramManagerApp:
                     tree.delete(item)
                 
                 # Process next item after a delay to avoid rate limiting
-                self.root.after(2000, lambda: _process_batch(items, index+1))
+                self.root.after(2000, lambda: _process_batch(items, index1))
             
             threading.Thread(target=lambda: _process_batch(items), daemon=True).start()
 
