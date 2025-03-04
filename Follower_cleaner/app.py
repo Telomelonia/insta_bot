@@ -5,108 +5,11 @@ import zipfile
 import tkinter as tk, webbrowser
 from tkinter import ttk, filedialog, messagebox
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 import threading
-import time
+import time 
 import re
 from datetime import datetime
-
-class InstagramBot:
-    def __init__(self):
-        self.driver = None
-        self.logged_in = False
-    
-    def initialize_browser(self):
-        """Initialize the Chrome browser with required options"""
-        chrome_options = Options()
-        chrome_options.add_argument("--start-maximized")
-        # Use existing Chrome profile to maintain login state
-        chrome_options.add_argument("--user-data-dir=C:\\ChromeProfile")
-        
-        try:
-            service = Service(ChromeDriverManager().install())
-            self.driver = webdriver.Chrome(service=service, options=chrome_options)
-            return True
-        except Exception as e:
-            print(f"Error initializing browser: {e}")
-            return False
-    
-    def check_login_status(self):
-        """Check if user is logged in to Instagram"""
-        try:
-            self.driver.get("https://www.instagram.com/")
-            time.sleep(3)
-            # Check if profile icon exists (indication of being logged in)
-            if len(self.driver.find_elements(By.XPATH, "//a[contains(@href, '/direct/inbox/')]")) > 0:
-                self.logged_in = True
-                return True
-            return False
-        except Exception as e:
-            print(f"Error checking login status: {e}")
-            return False
-    
-    def remove_follow_request(self, username):
-        """Remove a specific follow request"""
-        try:
-            self.driver.get(f"https://www.instagram.com/{username}")
-            time.sleep(2)
-            
-            # Find and click the "..." button
-            menu_button = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(@aria-label, 'More options')]"))
-            )
-            menu_button.click()
-            time.sleep(1)
-            
-            # Find and click "Remove" option
-            remove_button = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Remove')]"))
-            )
-            remove_button.click()
-            time.sleep(1)
-            
-            return True
-        except Exception as e:
-            print(f"Error removing follow request for {username}: {e}")
-            return False
-    
-    def unfollow_user(self, username):
-        """Unfollow a specific user"""
-        try:
-            self.driver.get(f"https://www.instagram.com/{username}")
-            time.sleep(2)
-            
-            # Find and click the "Following" button
-            following_button = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Following')]"))
-            )
-            following_button.click()
-            time.sleep(1)
-            
-            # Find and click "Unfollow" option in the confirmation dialog
-            unfollow_button = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Unfollow')]"))
-            )
-            unfollow_button.click()
-            time.sleep(1)
-            
-            return True
-        except Exception as e:
-            print(f"Error unfollowing {username}: {e}")
-            return False
-    
-    def close_browser(self):
-        """Close the browser"""
-        if self.driver:
-            self.driver.quit()
-
-
+                                                                                                                      
 class InstagramDataParser:
     def __init__(self):
         self.follow_requests = []
@@ -203,9 +106,8 @@ class InstagramManagerApp:
         self.style.configure("TLabel", background="#f0f0f0", font=("Arial", 10))
         self.style.configure("Header.TLabel", font=("Arial", 14, "bold"))
         self.style.configure("Subheader.TLabel", font=("Arial", 12))
-        
-        # Instagram bot and data parser
-        self.bot = InstagramBot()
+    
+        # parse the data
         self.data_parser = InstagramDataParser()
         
         # Variables
@@ -251,32 +153,7 @@ class InstagramManagerApp:
         # Tab 2: Non-Followers (People you follow who don't follow you back)
         self.non_followers_frame = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(self.non_followers_frame, text="Non-Followers")
-        
-        # Tab 3: Browser Control
-        self.browser_frame = ttk.Frame(self.notebook, padding=10)
-        self.notebook.add(self.browser_frame, text="Browser Control")
-        
-        # Browser control content
-        ttk.Label(self.browser_frame, text="Browser Control", style="Subheader.TLabel").pack(anchor=tk.W, pady=(0, 10))
-        ttk.Label(self.browser_frame, text="This will open a Chrome browser instance that uses your current Chrome profile.").pack(anchor=tk.W)
-        ttk.Label(self.browser_frame, text="Make sure you're already logged into Instagram in Chrome.").pack(anchor=tk.W, pady=(0, 10))
-        
-        browser_btn_frame = ttk.Frame(self.browser_frame)
-        browser_btn_frame.pack(anchor=tk.W, pady=10)
-        
-        ttk.Button(browser_btn_frame, text="Initialize Browser", command=self.init_browser).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(browser_btn_frame, text="Check Login Status", command=self.check_login).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(browser_btn_frame, text="Close Browser", command=self.close_browser).pack(side=tk.LEFT)
-        
-        # Status bar
-        status_frame = ttk.Frame(main_frame)
-        status_frame.pack(fill=tk.X, pady=(10, 0))
-        
-        ttk.Label(status_frame, text="Status:").pack(side=tk.LEFT)
-        ttk.Label(status_frame, textvariable=self.status_var).pack(side=tk.LEFT, padx=(5, 0))
-        
-        ttk.Progressbar(status_frame, variable=self.progress_var, length=200, mode="determinate").pack(side=tk.RIGHT)
-    
+
     def update_requests_tab(self):
         """Update the follow requests tab with data"""
         # Clear existing content
@@ -309,8 +186,8 @@ class InstagramManagerApp:
         tree.configure(yscrollcommand=scrollbar.set)
         
         # Add action buttons
-        ttk.Button(self.requests_frame, text="Remove Selected", command=lambda: self.remove_selected_requests(tree)).grid(row=2, column=0, pady=10, padx=(0, 5))
-        ttk.Button(self.requests_frame, text="Remove All", command=lambda: self.remove_all_requests(tree)).grid(row=2, column=1, pady=10, padx=5)
+        # ttk.Button(self.requests_frame, text="Remove Selected", command=lambda: self.remove_selected_requests(tree)).grid(row=2, column=0, pady=10, padx=(0, 5))
+        # ttk.Button(self.requests_frame, text="Remove All", command=lambda: self.remove_all_requests(tree)).grid(row=2, column=1, pady=10, padx=5)
         
         # Make the treeview expandable
         self.requests_frame.grid_rowconfigure(1, weight=1)
@@ -366,8 +243,8 @@ class InstagramManagerApp:
         tree.configure(yscrollcommand=scrollbar.set)
         
         # Add action buttons
-        ttk.Button(self.non_followers_frame, text="Unfollow Selected", command=lambda: self.unfollow_selected(tree)).grid(row=2, column=0, pady=10, padx=(0, 5))
-        ttk.Button(self.non_followers_frame, text="Unfollow All", command=lambda: self.unfollow_all(tree)).grid(row=2, column=1, pady=10, padx=5)
+        # ttk.Button(self.non_followers_frame, text="Unfollow Selected", command=lambda: self.unfollow_selected(tree)).grid(row=2, column=0, pady=10, padx=(0, 5))
+        # ttk.Button(self.non_followers_frame, text="Unfollow All", command=lambda: self.unfollow_all(tree)).grid(row=2, column=1, pady=10, padx=5)
         
         # Make the treeview expandable
         self.non_followers_frame.grid_rowconfigure(1, weight=1)
@@ -478,171 +355,7 @@ class InstagramManagerApp:
         except Exception as e:
             print(f"Error processing data: {e}")
             self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to process data: {str(e)}"))
-            self.status_var.set("Error processing data")
-    
-    def init_browser(self):
-        """Initialize browser"""
-        self.status_var.set("Initializing browser...")
-        
-        def _init():
-            success = self.bot.initialize_browser()
-            if success:
-                self.status_var.set("Browser initialized")
-            else:
-                self.status_var.set("Failed to initialize browser")
-                messagebox.showerror("Error", "Failed to initialize browser. Make sure Chrome is installed.")
-        
-        threading.Thread(target=_init, daemon=True).start()
-    
-    def check_login(self):
-        """Check if logged in to Instagram"""
-        if not self.bot.driver:
-            messagebox.showerror("Error", "Browser not initialized. Please initialize browser first.")
-            return
-        
-        self.status_var.set("Checking login status...")
-        
-        def _check():
-            logged_in = self.bot.check_login_status()
-            if logged_in:
-                self.status_var.set("Logged in to Instagram")
-                messagebox.showinfo("Login Status", "You are logged in to Instagram")
-            else:
-                self.status_var.set("Not logged in to Instagram")
-                messagebox.showwarning("Login Status", "You are not logged in to Instagram. Please log in using the browser.")
-        
-        threading.Thread(target=_check, daemon=True).start()
-    
-    def close_browser(self):
-        """Close browser"""
-        if self.bot.driver:
-            self.bot.close_browser()
-            self.status_var.set("Browser closed")
-        else:
-            self.status_var.set("No browser to close")
-    
-    def remove_selected_requests(self, tree):
-        """Remove selected follow requests"""
-        selected_items = tree.selection()
-        if not selected_items:
-            messagebox.showinfo("Info", "No items selected")
-            return
-        
-        if not self.bot.driver or not self.bot.logged_in:
-            messagebox.showerror("Error", "Please initialize browser and check login status first")
-            return
-        
-        if messagebox.askyesno("Confirm", "Are you sure you want to remove the selected follow requests?"):
-            for item in selected_items:
-                username = tree.item(item, "values")[0]
-                threading.Thread(target=self._remove_request, args=(username, item, tree), daemon=True).start()
-    
-    def _remove_request(self, username, item, tree):
-        """Remove a specific follow request in a background thread"""
-        self.status_var.set(f"Removing request from {username}...")
-        success = self.bot.remove_follow_request(username)
-        
-        if success:
-            self.root.after(0, lambda: tree.delete(item))
-            self.status_var.set(f"Removed request from {username}")
-        else:
-            self.status_var.set(f"Failed to remove request from {username}")
-    
-    def remove_all_requests(self, tree):
-        """Remove all follow requests"""
-        if not tree.get_children():
-            messagebox.showinfo("Info", "No follow requests to remove")
-            return
-        
-        if not self.bot.driver or not self.bot.logged_in:
-            messagebox.showerror("Error", "Please initialize browser and check login status first")
-            return
-        
-        if messagebox.askyesno("Confirm", "Are you sure you want to remove ALL follow requests?"):
-            items = tree.get_children()
-            total = len(items)
-            
-            def _process_batch(items, index=0):
-                if index >= len(items):
-                    self.status_var.set("All follow requests removed")
-                    return
-                
-                item = items[index]
-                username = tree.item(item, "values")[0]
-                
-                self.status_var.set(f"Removing request {index1}/{total}: {username}")
-                self.progress_var.set((index/total) * 100)
-                
-                success = self.bot.remove_follow_request(username)
-                if success:
-                    tree.delete(item)
-                
-                # Process next item after a delay
-                self.root.after(1000, lambda: _process_batch(items, index1))
-            
-            threading.Thread(target=lambda: _process_batch(items), daemon=True).start()
-    
-    def unfollow_selected(self, tree):
-        """Unfollow selected users"""
-        selected_items = tree.selection()
-        if not selected_items:
-            messagebox.showinfo("Info", "No items selected")
-            return
-        
-        if not self.bot.driver or not self.bot.logged_in:
-            messagebox.showerror("Error", "Please initialize browser and check login status first")
-            return
-        
-        if messagebox.askyesno("Confirm", "Are you sure you want to unfollow the selected users?"):
-            for item in selected_items:
-                username = tree.item(item, "values")[0]
-                threading.Thread(target=self._unfollow_user, args=(username, item, tree), daemon=True).start()
-    
-    def _unfollow_user(self, username, item, tree):
-        """Unfollow a specific user in a background thread"""
-        self.status_var.set(f"Unfollowing {username}...")
-        success = self.bot.unfollow_user(username)
-        
-        if success:
-            self.root.after(0, lambda: tree.delete(item))
-            self.status_var.set(f"Unfollowed {username}")
-        else:
-            self.status_var.set(f"Failed to unfollow {username}")
-    
-    def unfollow_all(self, tree):
-        """Unfollow all users in the non-followers list"""
-        if not tree.get_children():
-            messagebox.showinfo("Info", "No users to unfollow")
-            return
-        
-        if not self.bot.driver or not self.bot.logged_in:
-            messagebox.showerror("Error", "Please initialize browser and check login status first")
-            return
-        
-        if messagebox.askyesno("Confirm", "Are you sure you want to unfollow ALL these users?"):
-            items = tree.get_children()
-            total = len(items)
-            
-            def _process_batch(items, index=0):
-                if index >= len(items):
-                    self.status_var.set("All users unfollowed")
-                    return
-                
-                item = items[index]
-                username = tree.item(item, "values")[0]
-                
-                self.status_var.set(f"Unfollowing {index1}/{total}: {username}")
-                self.progress_var.set((index/total) * 100)
-                
-                success = self.bot.unfollow_user(username)
-                if success:
-                    tree.delete(item)
-                
-                # Process next item after a delay to avoid rate limiting
-                self.root.after(2000, lambda: _process_batch(items, index1))
-            
-            threading.Thread(target=lambda: _process_batch(items), daemon=True).start()
-
+            self.status_var.set("Error processing data")   
 
 def main():
     root = tk.Tk()
