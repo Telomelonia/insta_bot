@@ -24,15 +24,13 @@ if not os.path.exists(ICON_FILE):
 
 # Create the executable
 PyInstaller.__main__.run([
-    'instagram_bot.py',
+    'Follower_cleaner/app.py',
     '--name=%s' % APP_NAME,
     '--onefile',
     '--windowed',
     '--icon=%s' % ICON_FILE,
     '--add-data=%s;.' % ICON_FILE,
     '--hidden-import=bs4',
-    '--hidden-import=selenium',
-    '--hidden-import=webdriver_manager'
 ])
 
 print(f"Build complete! Executable is in the 'dist' folder: dist/{APP_NAME}.exe")
