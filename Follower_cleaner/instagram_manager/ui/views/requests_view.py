@@ -47,18 +47,16 @@ class RequestsTabView:
                                               columnspan=4)
         
         # Create Treeview for follow requests
-        columns = ("Username", "Date", "URL", "Actions")
+        columns = ("Username", "Date", "URL")
         self.tree = ttk.Treeview(self.parent, columns=columns, show="headings", height=15)
         
         self.tree.heading("Username", text="Username")
         self.tree.heading("Date", text="Date Requested")
         self.tree.heading("URL", text="Profile URL")
-        self.tree.heading("Actions", text="Actions")
         
         self.tree.column("Username", width=200)
         self.tree.column("Date", width=200)
-        self.tree.column("URL", width=250)
-        self.tree.column("Actions", width=150)
+        self.tree.column("URL", width=300)
         
         self.tree.grid(row=1, column=0, columnspan=4, sticky="nsew", pady=10)
         
@@ -121,8 +119,7 @@ class RequestsTabView:
             self.tree.insert("", "end", values=(
                 request["username"],
                 request["timestamp"],
-                request["url"],
-                "View Profile"
+                request["url"]
             ))
         
         logger.info(f"Updated requests view with {len(self.data_parser.follow_requests)} items")
