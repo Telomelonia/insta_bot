@@ -1,7 +1,7 @@
 """
-Non-Followers Tab View Module
+Pending Requests Tab View Module
 
-This module handles the UI for the non-followers tab.
+This module handles the UI for the pending follow requests tab.
 """
 
 import tkinter as tk
@@ -11,50 +11,52 @@ from tkinter import ttk
 
 logger = logging.getLogger(__name__)
 
-class NonFollowersTabView:
+class PendingRequestsTabView:
     """
-    View class for the non-followers tab.
+    View class for the pending follow requests tab.
     
     This class manages displaying and interacting with the list of
-    users who don't follow you back.
+    follow requests that you've sent to other users.
     """
     
     def __init__(self, parent, data_parser, status_var):
         """
-        Initialize the non-followers tab view.
+        Initialize the pending requests tab view.
         
         Args:
             parent (ttk.Frame): Parent frame for this view
-            data_parser (InstagramDataParser): The data parser instance with user data
+            data_parser (InstagramDataParser): The data parser instance with request data
             status_var (tk.StringVar): Status bar variable for displaying messages
         """
         self.parent = parent
         self.data_parser = data_parser
         self.status_var = status_var
         
-        logger.debug("Initializing NonFollowersTabView")
+        logger.debug("Initializing PendingRequestsTabView")
         
         # Initialize empty UI
         self.tree = None
         self._create_ui()
     
     def _create_ui(self):
-        """Create the UI elements for the non-followers tab."""
+        """Create the UI elements for the pending requests tab."""
         # Header
-        ttk.Label(self.parent, text="Users You Follow Who Don't Follow You Back", 
+        ttk.Label(self.parent, text="Pending Follow Requests You've Sent", 
                  style="Subheader.TLabel").grid(row=0, column=0, 
                                               sticky=tk.W, pady=(0, 10), 
                                               columnspan=4)
         
-        # Create Treeview for non-followers
-        columns = ("Username", "URL")
+        # Create Treeview for pending requests
+        columns = ("Username", "Date", "URL")
         self.tree = ttk.Treeview(self.parent, columns=columns, show="headings", height=15)
         
         self.tree.heading("Username", text="Username")
+        self.tree.heading("Date", text="Date Sent")
         self.tree.heading("URL", text="Profile URL")
         
         self.tree.column("Username", width=200)
-        self.tree.column("URL", width=500)
+        self.tree.column("Date", width=200)
+        self.tree.column("URL", width=300)
         
         self.tree.grid(row=1, column=0, columnspan=4, sticky="nsew", pady=10)
         
@@ -62,12 +64,6 @@ class NonFollowersTabView:
         scrollbar = ttk.Scrollbar(self.parent, orient=tk.VERTICAL, command=self.tree.yview)
         scrollbar.grid(row=1, column=4, sticky="ns")
         self.tree.configure(yscrollcommand=scrollbar.set)
-        # TODO: Feature for action buttons
-        # Add action buttons (commented out for now as they're not implemented)
-        # ttk.Button(self.parent, text="Unfollow Selected", 
-        #            command=self._unfollow_selected).grid(row=2, column=0, pady=10, padx=(0, 5))
-        # ttk.Button(self.parent, text="Unfollow All", 
-        #            command=self._unfollow_all).grid(row=2, column=1, pady=10, padx=5)
         
         # Make the treeview expandable
         self.parent.grid_rowconfigure(1, weight=1)
@@ -89,16 +85,16 @@ class NonFollowersTabView:
         region = self.tree.identify_region(event.x, event.y)
         if region == "cell":
             column = self.tree.identify_column(event.x)
-            if column == "#2":  # URL column
+            if column == "#3":  # URL column
                 item = self.tree.identify_row(event.y)
                 if not item:
                     return
                     
                 values = self.tree.item(item, "values")
-                if not values or len(values) < 2:
+                if not values or len(values) < 3:
                     return
                     
-                url = values[1]
+                url = values[2]
                 if url:
                     logger.info(f"Opening URL: {url}")
                     webbrowser.open(url)
@@ -112,28 +108,12 @@ class NonFollowersTabView:
         for item in self.tree.get_children():
             self.tree.delete(item)
         
-        # Populate treeview with non-followers
-        for user in self.data_parser.non_followers:
+        # Populate treeview with pending requests
+        for request in self.data_parser.pending_sent_requests:
             self.tree.insert("", "end", values=(
-                user["username"],
-                user["url"]
+                request["username"],
+                request["timestamp"],
+                request["url"]
             ))
         
-        logger.info(f"Updated non-followers view with {len(self.data_parser.non_followers)} items")
-    
-    def _unfollow_selected(self):
-        """Unfollow the selected users (not implemented)."""
-        # This would be implemented if Instagram had an API to do this
-        selected = self.tree.selection()
-        if selected:
-            item = self.tree.item(selected[0])
-            username = item["values"][0]
-            self.status_var.set(f"Would unfollow {username} (not implemented)")
-            logger.info(f"Request to unfollow {username}")
-    
-    def _unfollow_all(self):
-        """Unfollow all non-followers (not implemented)."""
-        # This would be implemented if Instagram had an API to do this
-        count = len(self.tree.get_children())
-        self.status_var.set(f"Would unfollow all {count} non-followers (not implemented)")
-        logger.info(f"Request to unfollow all {count} non-followers")
+        logger.info(f"Updated pending requests view with {len(self.data_parser.pending_sent_requests)} items")

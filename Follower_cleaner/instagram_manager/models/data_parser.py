@@ -26,6 +26,7 @@ class InstagramDataParser:
         self.followers = []
         self.following = []
         self.non_followers = []  # People you follow who don't follow you back
+        self.pending_sent_requests = []  # People you've requested to follow
     
     def extract_zip(self, zip_path, extract_dir):
         """
@@ -110,6 +111,19 @@ class InstagramDataParser:
         self.follow_requests = self.parse_html_file(file_path)
         return self.follow_requests
     
+    def parse_pending_sent_requests(self, file_path):
+        """
+        Parse pending follow requests you've sent HTML file.
+        
+        Args:
+            file_path (str): Path to the pending follow requests HTML file
+            
+        Returns:
+            list: List of pending follow requests you've sent
+        """
+        self.pending_sent_requests = self.parse_html_file(file_path)
+        return self.pending_sent_requests
+        
     def parse_followers(self, file_path):
         """
         Parse followers HTML file.

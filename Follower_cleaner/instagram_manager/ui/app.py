@@ -13,6 +13,7 @@ from tkinter import ttk, filedialog, messagebox
 
 from instagram_manager.models.data_parser import InstagramDataParser
 from instagram_manager.ui.views.requests_view import RequestsTabView
+from instagram_manager.ui.views.pending_requests_view import PendingRequestsTabView
 from instagram_manager.ui.views.non_followers_view import NonFollowersTabView
 
 logger = logging.getLogger(__name__)
@@ -103,11 +104,15 @@ class InstagramManagerApp:
         self.requests_frame = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(self.requests_frame, text="Follow Requests")
         
+        self.pending_requests_frame = ttk.Frame(self.notebook, padding=10)
+        self.notebook.add(self.pending_requests_frame, text="Pending Requests")
+        
         self.non_followers_frame = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(self.non_followers_frame, text="Non-Followers")
         
         # Initialize tab views
         self.requests_view = RequestsTabView(self.requests_frame, self.data_parser, self.status_var)
+        self.pending_requests_view = PendingRequestsTabView(self.pending_requests_frame, self.data_parser, self.status_var)
         self.non_followers_view = NonFollowersTabView(self.non_followers_frame, self.data_parser, self.status_var)
     
     def _create_file_section(self, parent):
@@ -170,7 +175,7 @@ class InstagramManagerApp:
                 return
             
             self.progress_var.set(30)
-            self.status_var.set("Processing follow requests...")
+            self.status_var.set("Processing follow requests received...")
             
             # Find and process HTML files
             connections_dir = os.path.join(self.extract_dir.get(), "connections", "followers_and_following")
@@ -181,6 +186,23 @@ class InstagramManagerApp:
                 self.data_parser.parse_follow_requests(follow_requests_path)
             else:
                 logger.warning(f"Follow requests file not found: {follow_requests_path}")
+            
+            self.progress_var.set(40)
+            self.status_var.set("Processing pending follow requests sent...")
+            
+            # Parse pending follow requests sent
+            pending_sent_path = os.path.join(connections_dir, "pending_follow_requests.html")
+            if os.path.exists(pending_sent_path):
+                self.data_parser.parse_pending_sent_requests(pending_sent_path)
+            else:
+                logger.warning(f"Pending requests file not found: {pending_sent_path}")
+                # Try to find the file in a different location
+                for root, dirs, files in os.walk(self.extract_dir.get()):
+                    if "pending_follow_requests.html" in files:
+                        pending_sent_path = os.path.join(root, "pending_follow_requests.html")
+                        self.data_parser.parse_pending_sent_requests(pending_sent_path)
+                        logger.info(f"Found pending requests file at: {pending_sent_path}")
+                        break
             
             self.progress_var.set(50)
             self.status_var.set("Processing followers...")
@@ -222,6 +244,7 @@ class InstagramManagerApp:
     def update_ui(self):
         """Update all UI elements with the parsed data."""
         self.requests_view.update_view()
+        self.pending_requests_view.update_view()
         self.non_followers_view.update_view()
         
         # Select the first tab
