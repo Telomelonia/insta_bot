@@ -16,6 +16,7 @@ class InstagramDataParser:
         self.followers = []
         self.following = []
         self.non_followers = []  # People you follow who don't follow you back
+        self.pending_sent_requests = []  # People you've requested to follow
     
     def extract_zip(self, zip_path, extract_dir):
         """Extract Instagram data zip file"""
@@ -70,6 +71,11 @@ class InstagramDataParser:
         """Parse follow requests HTML file"""
         self.follow_requests = self.parse_html_file(file_path)
         return self.follow_requests
+    
+    def parse_pending_sent_requests(self, file_path):
+        """Parse pending follow requests you've sent HTML file"""
+        self.pending_sent_requests = self.parse_html_file(file_path)
+        return self.pending_sent_requests
     
     def parse_followers(self, file_path):
         """Parse followers HTML file"""
@@ -142,26 +148,55 @@ class InstagramManagerApp:
         ttk.Label(file_frame, text="Warning: Make sure to download HTML files, not JSON,\nfrom Instagram's Download Your Information page").grid(row=1, column=0, columnspan=3, sticky=tk.W, pady=5)
         ttk.Button(file_frame, text="Import Data", command=self.import_data).grid(row=2, column=0, columnspan=3, pady=10)
         
+        # Status bar
+        status_frame = ttk.Frame(main_frame)
+        status_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(status_frame, textvariable=self.status_var).pack(side=tk.LEFT)
+        ttk.Progressbar(status_frame, variable=self.progress_var, length=200, mode="determinate").pack(side=tk.RIGHT)
+        
         # Notebook (tabs)
         self.notebook = ttk.Notebook(main_frame)
         self.notebook.pack(fill=tk.BOTH, expand=True, pady=10)
         
-        # Tab 1: Follow Requests
+        # Tab 1: Follow Requests Received
         self.requests_frame = ttk.Frame(self.notebook, padding=10)
-        self.notebook.add(self.requests_frame, text="Follow Requests")
+        self.notebook.add(self.requests_frame, text="Follow Requests Received")
         
-        # Tab 2: Non-Followers (People you follow who don't follow you back)
+        # Tab 2: Pending Follow Requests Sent
+        self.pending_sent_frame = ttk.Frame(self.notebook, padding=10)
+        self.notebook.add(self.pending_sent_frame, text="Pending Requests Sent")
+        
+        # Tab 3: Non-Followers (People you follow who don't follow you back)
         self.non_followers_frame = ttk.Frame(self.notebook, padding=10)
         self.notebook.add(self.non_followers_frame, text="Non-Followers")
 
+        # Add option to load individual files for testing
+        ttk.Button(main_frame, text="Load Pending Sent Requests File", 
+                  command=self.load_pending_sent_requests_file).pack(side=tk.LEFT, pady=5)
+
+    def load_pending_sent_requests_file(self):
+        """Load pending sent requests file directly (for testing)"""
+        file_path = filedialog.askopenfilename(
+            title="Select Pending Follow Requests HTML File",
+            filetypes=[("HTML files", "*.html")]
+        )
+        if file_path:
+            try:
+                self.data_parser.parse_pending_sent_requests(file_path)
+                self.update_pending_sent_tab()
+                self.notebook.select(1)  # Switch to the pending sent tab
+                self.status_var.set("Loaded pending sent requests file")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to load file: {str(e)}")
+        
     def update_requests_tab(self):
-        """Update the follow requests tab with data"""
+        """Update the follow requests received tab with data"""
         # Clear existing content
         for widget in self.requests_frame.winfo_children():
             widget.destroy()
         
         # Header
-        ttk.Label(self.requests_frame, text="Pending Follow Requests", style="Subheader.TLabel").grid(row=0, column=0, sticky=tk.W, pady=(0, 10), columnspan=3)
+        ttk.Label(self.requests_frame, text="Follow Requests Received", style="Subheader.TLabel").grid(row=0, column=0, sticky=tk.W, pady=(0, 10), columnspan=3)
         
         # Create Treeview for follow requests
         columns = ("Username", "Date", "URL", "Actions")
@@ -213,6 +248,65 @@ class InstagramManagerApp:
         # Populate treeview with follow requests
         for i, request in enumerate(self.data_parser.follow_requests):
             tree.insert("", "end", values=(request["username"], request["timestamp"], request["url"], "Remove"))
+    
+    def update_pending_sent_tab(self):
+        """Update the pending follow requests sent tab with data"""
+        # Clear existing content
+        for widget in self.pending_sent_frame.winfo_children():
+            widget.destroy()
+        
+        # Header
+        ttk.Label(self.pending_sent_frame, text="Pending Follow Requests You've Sent", style="Subheader.TLabel").grid(row=0, column=0, sticky=tk.W, pady=(0, 10), columnspan=3)
+        
+        # Create Treeview for pending sent requests
+        columns = ("Username", "Date", "URL", "Actions")
+        tree = ttk.Treeview(self.pending_sent_frame, columns=columns, show="headings", height=15)
+        
+        tree.heading("Username", text="Username")
+        tree.heading("Date", text="Date Sent")
+        tree.heading("URL", text="Profile URL")
+        tree.heading("Actions", text="Actions")
+        
+        tree.column("Username", width=200)
+        tree.column("Date", width=200)
+        tree.column("URL", width=250)
+        tree.column("Actions", width=150)
+        
+        tree.grid(row=1, column=0, columnspan=4, sticky="nsew", pady=10)
+        
+        # Add a scrollbar
+        scrollbar = ttk.Scrollbar(self.pending_sent_frame, orient=tk.VERTICAL, command=tree.yview)
+        scrollbar.grid(row=1, column=3, sticky="ns")
+        tree.configure(yscrollcommand=scrollbar.set)
+        
+        # Add action buttons
+        # ttk.Button(self.pending_sent_frame, text="Cancel Selected", command=lambda: self.cancel_selected_requests(tree)).grid(row=2, column=0, pady=10, padx=(0, 5))
+        # ttk.Button(self.pending_sent_frame, text="Cancel All", command=lambda: self.cancel_all_requests(tree)).grid(row=2, column=1, pady=10, padx=5)
+        
+        # Make the treeview expandable
+        self.pending_sent_frame.grid_rowconfigure(1, weight=1)
+        self.pending_sent_frame.grid_columnconfigure(0, weight=1)
+        self.pending_sent_frame.grid_columnconfigure(1, weight=1)
+        self.pending_sent_frame.grid_columnconfigure(2, weight=1)
+        
+        # Add binding for clickable URL
+        def on_treeview_click(event):
+            region = tree.identify_region(event.x, event.y)
+            if region == "cell":
+                column = tree.identify_column(event.x)
+                if column == "#3":
+                    item = tree.identify_row(event.y)
+                    url = tree.item(item, "values")[2]
+                    if url:
+                        webbrowser.open(url)
+                        self.status_var.set(f"Opening {url}")
+                    else:
+                        self.status_var.set("No URL available")
+        tree.bind("<ButtonRelease-1>", on_treeview_click)
+
+        # Populate treeview with pending sent requests
+        for i, request in enumerate(self.data_parser.pending_sent_requests):
+            tree.insert("", "end", values=(request["username"], request["timestamp"], request["url"], "Cancel"))
     
     def update_non_followers_tab(self):
         """Update the non-followers tab with data"""
@@ -312,18 +406,34 @@ class InstagramManagerApp:
                 self.status_var.set("Error extracting data")
                 return
             
-            self.progress_var.set(30)
-            self.status_var.set("Processing follow requests...")
+            self.progress_var.set(25)
+            self.status_var.set("Processing follow requests received...")
             
             # Find and process HTML files
             connections_dir = os.path.join(self.extract_dir.get(), "connections", "followers_and_following")
             
-            # Parse follow requests
+            # Parse follow requests received
             follow_requests_path = os.path.join(connections_dir, "follow_requests_you've_received.html")
             if os.path.exists(follow_requests_path):
                 self.data_parser.parse_follow_requests(follow_requests_path)
             
-            self.progress_var.set(50)
+            self.progress_var.set(40)
+            self.status_var.set("Processing pending follow requests sent...")
+            
+            # Parse pending follow requests sent
+            pending_sent_path = os.path.join(connections_dir, "pending_follow_requests.html")
+            if os.path.exists(pending_sent_path):
+                self.data_parser.parse_pending_sent_requests(pending_sent_path)
+            else:
+                print(f"Warning: Could not find {pending_sent_path}")
+                # If the file is in a different location than expected, try to find it
+                for root, dirs, files in os.walk(self.extract_dir.get()):
+                    if "pending_follow_requests.html" in files:
+                        pending_sent_path = os.path.join(root, "pending_follow_requests.html")
+                        self.data_parser.parse_pending_sent_requests(pending_sent_path)
+                        break
+            
+            self.progress_var.set(55)
             self.status_var.set("Processing followers...")
             
             # Parse followers
@@ -339,7 +449,7 @@ class InstagramManagerApp:
             if os.path.exists(following_path):
                 self.data_parser.parse_following(following_path)
             
-            self.progress_var.set(90)
+            self.progress_var.set(85)
             self.status_var.set("Finding non-followers...")
             
             # Find non-followers
@@ -350,6 +460,7 @@ class InstagramManagerApp:
             
             # Update UI
             self.root.after(0, self.update_requests_tab)
+            self.root.after(0, self.update_pending_sent_tab)
             self.root.after(0, self.update_non_followers_tab)
             
         except Exception as e:
