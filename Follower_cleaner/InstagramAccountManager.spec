@@ -5,8 +5,8 @@ a = Analysis(
     ['instagram_manager\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[('resources\\instagram_icon.ico', 'resources')],
-    hiddenimports=['bs4', 'tkinter', 'tkinter.ttk', 'logging.handlers'],
+    datas=[('resources', 'resources')],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -35,5 +35,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['resources\\instagram_icon.ico'],
 )

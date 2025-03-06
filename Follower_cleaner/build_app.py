@@ -1,81 +1,123 @@
 #!/usr/bin/env python3
 """
-Simple script to build Instagram Account Manager from a local directory.
-This script avoids network drive issues by working with local files.
+Build Script for Instagram Account Manager
+
+This script creates an executable (.exe) file from the Instagram Account Manager
+application using PyInstaller.
+
+Usage:
+    python build_app.py
+
+Requirements:
+    - PyInstaller package: pip install pyinstaller
 """
 
 import os
-import shutil
 import sys
+import shutil
 import subprocess
-import tempfile
+import argparse
+from pathlib import Path
 
-def main():
-    print("Instagram Account Manager - Local Build Helper")
-    print("=" * 50)
+def ensure_pyinstaller_installed():
+    """Check if PyInstaller is installed and install it if necessary."""
+    try:
+        import PyInstaller
+        print("PyInstaller is already installed.")
+    except ImportError:
+        print("PyInstaller not found. Installing...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
+        print("PyInstaller installed successfully.")
+
+def clean_build_directories():
+    """Clean up previous build directories if they exist."""
+    build_dir = Path("build")
+    dist_dir = Path("dist")
     
-    # Create a temporary directory on C: drive
-    temp_dir = tempfile.mkdtemp(prefix="instagram_build_")
-    print(f"Created temporary directory: {temp_dir}")
+    if build_dir.exists():
+        print(f"Cleaning up {build_dir}...")
+        shutil.rmtree(build_dir)
     
-    # Get source directory from command line or current directory
-    source_dir = os.getcwd()
-    print(f"Source directory: {source_dir}")
+    if dist_dir.exists():
+        print(f"Cleaning up {dist_dir}...")
+        shutil.rmtree(dist_dir)
+
+def create_executable(one_file=True, console=False, icon_path=None):
+    """
+    Build the executable using PyInstaller.
     
-    # Copy project files to the temp directory
-    print("Copying project files to local drive...")
-    for item in os.listdir(source_dir):
-        if item not in ['build', 'dist', '__pycache__', '.git']:
-            src_path = os.path.join(source_dir, item)
-            dst_path = os.path.join(temp_dir, item)
-            if os.path.isdir(src_path):
-                shutil.copytree(src_path, dst_path)
-            else:
-                shutil.copy2(src_path, dst_path)
+    Args:
+        one_file (bool): If True, create a single executable file. If False, create a directory.
+        console (bool): If True, show console window when running the app. If False, hide console.
+        icon_path (str): Path to the icon file for the executable.
+    """
+    print("Building executable with PyInstaller...")
     
-    # Run PyInstaller from the temp directory
-    print("Running PyInstaller from local drive...")
-    os.chdir(temp_dir)
-    
-    # Run PyInstaller command
-    pyinstaller_cmd = [
-        sys.executable,
-        "-m",
-        "PyInstaller",
-        "--onefile",
-        "--windowed",
-        "--clean",
+    # Base command
+    cmd = [
+        "pyinstaller",
         "--name=InstagramAccountManager",
-        "instagram_manager/main.py"
+        "--clean",
+        "--noconfirm",
     ]
     
-    try:
-        subprocess.run(pyinstaller_cmd, check=True)
-        print("PyInstaller completed successfully!")
-        
-        # Copy the build results back to the original directory
-        print("Copying build results back to original location...")
-        dist_src = os.path.join(temp_dir, "dist")
-        dist_dst = os.path.join(source_dir, "dist")
-        
-        if os.path.exists(dist_dst):
-            shutil.rmtree(dist_dst)
-        
-        shutil.copytree(dist_src, dist_dst)
-        print(f"Build successful! Executable is in: {dist_dst}")
-        
-    except subprocess.CalledProcessError as e:
-        print(f"Error running PyInstaller: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+    # Add one-file or one-directory mode
+    if one_file:
+        cmd.append("--onefile")
+    else:
+        cmd.append("--onedir")
     
-    # Clean up
-    print("Cleaning up temporary files...")
-    try:
-        shutil.rmtree(temp_dir)
-    except:
-        print(f"Note: Could not remove temp directory: {temp_dir}")
-        print("You may want to delete it manually later.")
+    # Add console mode
+    if not console:
+        cmd.append("--noconsole")
+    
+    # Add icon if provided
+    if icon_path and os.path.exists(icon_path):
+        cmd.append(f"--icon={icon_path}")
+    
+    # Add additional data files (if any)
+    resources_dir = Path("resources")
+    if resources_dir.exists():
+        cmd.append(f"--add-data={resources_dir};resources")
+    
+    # Main script
+    cmd.append("instagram_manager/main.py")
+    
+    # Execute PyInstaller
+    print(f"Running command: {' '.join(cmd)}")
+    subprocess.check_call(cmd)
+    
+    print("\nExecutable created successfully!")
+    if one_file:
+        print(f"You can find the executable at: {os.path.abspath('dist/InstagramAccountManager.exe')}")
+    else:
+        print(f"You can find the executable at: {os.path.abspath('dist/InstagramAccountManager/InstagramAccountManager.exe')}")
+
+def main():
+    """Main function to handle the build process."""
+    parser = argparse.ArgumentParser(description="Build Instagram Account Manager executable")
+    parser.add_argument("--dir", action="store_true", help="Create a directory instead of a single file")
+    parser.add_argument("--console", action="store_true", help="Show console window when app is running")
+    parser.add_argument("--icon", type=str, help="Path to icon file for the executable")
+    parser.add_argument("--skip-cleanup", action="store_true", help="Skip cleaning up previous build files")
+    
+    args = parser.parse_args()
+    
+    # Make sure PyInstaller is installed
+    ensure_pyinstaller_installed()
+    
+    # Clean up previous build files unless --skip-cleanup is specified
+    if not args.skip_cleanup:
+        clean_build_directories()
+    
+    # Create the executable
+    create_executable(
+        one_file=not args.dir,
+        console=args.console,
+        icon_path=args.icon
+    )
+    
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
