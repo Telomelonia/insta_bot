@@ -85,6 +85,30 @@ If you encounter any issues:
 
 For more help, please [open an issue](https://github.com/YourUsername/InstagramAccountManager/issues) on GitHub.
 
-## License
+### Project tree
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+```
+Follower_cleaner/
+├── build_app.py                         (new build script)
+├── simple_build.bat                     (new batch file for easy building)
+├── requirements.txt
+├── setup.py
+├── README.md
+├── instagram_manager/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── utils/
+│   │   ├── file_utils.py
+│   │   └── logger.py
+│   ├── models/
+│   │   └── data_parser.py               (updated with pending requests)
+│   └── ui/
+│       ├── app.py                       (updated with pending requests tab)
+│       └── views/
+│           ├── main_view.py
+│           ├── requests_view.py         (updated with actions removed)
+│           ├── pending_requests_view.py (new view for pending requests)
+│           └── non_followers_view.py    (updated with actions removed)
+└── resources/
+    └── instagram_icon.ico               (optional)
+```
