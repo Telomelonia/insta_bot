@@ -24,7 +24,7 @@ if not os.path.exists(ICON_FILE):
 
 # Create the executable
 PyInstaller.__main__.run([
-    'Follower_cleaner/app.py',
+    'app.py',
     '--name=%s' % APP_NAME,
     '--onefile',
     '--windowed',
