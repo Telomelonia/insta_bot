@@ -2,11 +2,11 @@
 
 
 a = Analysis(
-    ['Follower_cleaner\\app.py'],
+    ['Follower_cleaner\\instagram_manager\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[('instagram_icon.ico', '.')],
-    hiddenimports=['bs4', 'selenium', 'webdriver_manager'],
+    datas=[],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['instagram_icon.ico'],
+    icon=['Follower_cleaner\\resources\\instagram_icon.ico','Follower_cleaner\\resources\\instagram_icon.ico'],
 )
