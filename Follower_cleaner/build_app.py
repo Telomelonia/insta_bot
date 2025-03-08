@@ -80,7 +80,7 @@ def create_executable(one_file=True, console=False, icon_path="Follower_cleaner/
         cmd.append(f"--add-data={resources_dir};resources")
     
     # Main script
-    cmd.append("Follower_cleaner/instagram_manager/main.py")
+    cmd.append("instagram_manager/main.py")
     
     # Execute PyInstaller
     print(f"Running command: {' '.join(cmd)}")
