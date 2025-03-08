@@ -42,7 +42,7 @@ def clean_build_directories():
         print(f"Cleaning up {dist_dir}...")
         shutil.rmtree(dist_dir)
 
-def create_executable(one_file=True, console=False, icon_path=None):
+def create_executable(one_file=True, console=False, icon_path="Follower_cleaner/resources/instagram_icon.ico"):
     """
     Build the executable using PyInstaller.
     
@@ -70,7 +70,6 @@ def create_executable(one_file=True, console=False, icon_path=None):
     # Add console mode
     if not console:
         cmd.append("--noconsole")
-    
     # Add icon if provided
     if icon_path and os.path.exists(icon_path):
         cmd.append(f"--icon={icon_path}")
@@ -81,7 +80,7 @@ def create_executable(one_file=True, console=False, icon_path=None):
         cmd.append(f"--add-data={resources_dir};resources")
     
     # Main script
-    cmd.append("instagram_manager/main.py")
+    cmd.append("Follower_cleaner/instagram_manager/main.py")
     
     # Execute PyInstaller
     print(f"Running command: {' '.join(cmd)}")
@@ -95,10 +94,11 @@ def create_executable(one_file=True, console=False, icon_path=None):
 
 def main():
     """Main function to handle the build process."""
+    default_icon = "Follower_cleaner/resources/instagram_icon.ico"
     parser = argparse.ArgumentParser(description="Build Instagram Account Manager executable")
     parser.add_argument("--dir", action="store_true", help="Create a directory instead of a single file")
     parser.add_argument("--console", action="store_true", help="Show console window when app is running")
-    parser.add_argument("--icon", type=str, help="Path to icon file for the executable")
+    parser.add_argument("--icon", type=str, help="Path to icon file for the executable", default=default_icon)
     parser.add_argument("--skip-cleanup", action="store_true", help="Skip cleaning up previous build files")
     
     args = parser.parse_args()
