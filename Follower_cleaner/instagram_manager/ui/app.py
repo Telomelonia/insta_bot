@@ -1,7 +1,8 @@
 """
-Instagram Manager App UI Module
+Instagram Manager App UI Module - Apple UI Style
 
-This module contains the main application UI class for the Instagram Manager.
+This module contains the main application UI class for the Instagram Manager
+with Apple UI design standards applied.
 """
 
 import os
@@ -20,9 +21,10 @@ logger = logging.getLogger(__name__)
 
 class InstagramManagerApp:
     """
-    Main application class for the Instagram Account Manager.
+    Main application class for the Instagram Account Manager with Apple UI design.
     
-    This class creates and manages the main UI window and tabs.
+    This class creates and manages the main UI window and tabs following
+    macOS design guidelines.
     """
     
     def __init__(self, root):
@@ -33,7 +35,7 @@ class InstagramManagerApp:
             root (tk.Tk): The root Tkinter window
         """
         self.root = root
-        self.root.title("Instagram Account Manager")
+        self.root.title("Instagram Manager")
         self.root.geometry("900x600")
         self.root.resizable(True, True)
         
@@ -42,8 +44,8 @@ class InstagramManagerApp:
         if os.path.exists(icon_path):
             self.root.iconbitmap(icon_path)
         
-        # Setup styles
-        self._setup_styles()
+        # Setup Apple-like styles
+        self._setup_apple_styles()
         
         # Initialize data parser
         self.data_parser = InstagramDataParser()
@@ -55,82 +57,183 @@ class InstagramManagerApp:
         self.progress_var = tk.DoubleVar(value=0.0)
         
         # Create UI elements
-        self._create_ui()
+        self._create_apple_ui()
         
-        logger.info("Application UI initialized")
+        logger.info("Application UI initialized with Apple design standards")
     
-    def _setup_styles(self):
-        """Configure ttk styles for the application."""
+    def _setup_apple_styles(self):
+        """Configure ttk styles for Apple-like appearance."""
         self.style = ttk.Style()
-        self.style.theme_use("clam")
-        self.style.configure("TFrame", background="#f0f0f0")
-        self.style.configure("TButton", background="#4e4edd", foreground="white", font=("Arial", 10))
-        self.style.configure("TLabel", background="#f0f0f0", font=("Arial", 10))
-        self.style.configure("Header.TLabel", font=("Arial", 14, "bold"))
-        self.style.configure("Subheader.TLabel", font=("Arial", 12))
+        
+        # Use the closest theme to macOS
+        if "aqua" in self.style.theme_names():
+            # If running on macOS, use native aqua theme
+            self.style.theme_use("aqua")
+        else:
+            # Otherwise use a light theme and customize
+            self.style.theme_use("clam")
+        
+        # Define Apple-like colors
+        apple_bg = "#FFFFFF"
+        apple_accent = "#0066CC"  # Apple's blue accent color
+        apple_light_gray = "#F5F5F7"
+        apple_dark_gray = "#86868B"
+        
+        # Configure styles to match Apple's design language
+        self.style.configure("TFrame", background=apple_bg)
+        self.style.configure("TButton", 
+                            background=apple_accent, 
+                            foreground="white", 
+                            font=("SF Pro", 10, "normal"),
+                            borderwidth=0,
+                            focusthickness=0,
+                            padding=5)
+        self.style.map("TButton",
+                      background=[('active', '#0077E6')],
+                      relief=[('pressed', 'flat')])
+        
+        # Secondary button style (outlined)
+        self.style.configure("Secondary.TButton", 
+                            background=apple_bg,
+                            foreground=apple_accent,
+                            font=("SF Pro", 10, "normal"),
+                            borderwidth=1,
+                            relief="solid",
+                            focusthickness=0,
+                            padding=5)
+        self.style.map("Secondary.TButton",
+                      background=[('active', '#F0F0F0')],
+                      foreground=[('active', apple_accent)])
+        
+        # Label styles
+        self.style.configure("TLabel", 
+                            background=apple_bg, 
+                            font=("SF Pro", 10, "normal"))
+        
+        self.style.configure("Header.TLabel", 
+                            font=("SF Pro", 20, "normal"),
+                            foreground="#000000",
+                            background=apple_bg)
+        
+        self.style.configure("Subheader.TLabel", 
+                            font=("SF Pro", 14, "normal"),
+                            foreground="#000000",
+                            background=apple_bg)
+        
+        # Notebook (tab) style
+        self.style.configure("TNotebook", 
+                            background=apple_bg,
+                            borderwidth=0)
+        self.style.configure("TNotebook.Tab", 
+                            background=apple_light_gray,
+                            foreground=apple_dark_gray,
+                            padding=[12, 4],
+                            font=("SF Pro", 10, "normal"))
+        self.style.map("TNotebook.Tab",
+                      background=[("selected", apple_bg)],
+                      foreground=[("selected", apple_accent)],
+                      expand=[("selected", [0, 0, 0, 0])])
+        
+        # Progress bar
+        self.style.configure("TProgressbar", 
+                            background=apple_accent,
+                            troughcolor=apple_light_gray,
+                            borderwidth=0,
+                            thickness=6)
+        
+        # Entry fields
+        self.style.configure("TEntry", 
+                            font=("SF Pro", 10, "normal"),
+                            borderwidth=1,
+                            relief="solid",
+                            fieldbackground=apple_bg)
+        
+        # Labelframe
+        self.style.configure("TLabelframe", 
+                            background=apple_bg,
+                            borderwidth=1,
+                            relief="solid")
+        self.style.configure("TLabelframe.Label", 
+                            background=apple_bg,
+                            font=("SF Pro", 12, "normal"),
+                            foreground="#000000")
     
-    def _create_ui(self):
-        """Create the application UI elements."""
-        # Main frame
-        main_frame = ttk.Frame(self.root, padding="10")
+    def _create_apple_ui(self):
+        """Create the application UI elements with Apple design standards."""
+        # Main frame with padding
+        main_frame = ttk.Frame(self.root, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Header
+        # Header with SF font and proper spacing
         header_frame = ttk.Frame(main_frame)
-        header_frame.pack(fill=tk.X, pady=(0, 10))
+        header_frame.pack(fill=tk.X, pady=(0, 20))
         
-        ttk.Label(header_frame, text="Instagram Account Manager", style="Header.TLabel").pack(side=tk.LEFT)
+        ttk.Label(header_frame, text="Instagram Manager", style="Header.TLabel").pack(side=tk.LEFT)
         
         # File selection section
         self._create_file_section(main_frame)
         
-        # Progress and status bar
-        status_frame = ttk.Frame(main_frame)
-        status_frame.pack(fill=tk.X, side=tk.BOTTOM, pady=5)
-        
-        progress_bar = ttk.Progressbar(status_frame, orient=tk.HORIZONTAL, 
-                                      length=100, mode='determinate', 
-                                      variable=self.progress_var)
-        progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
-        
-        status_label = ttk.Label(status_frame, textvariable=self.status_var)
-        status_label.pack(side=tk.RIGHT)
-        
-        # Notebook (tabs)
+        # Notebook (tabs) with Apple-like styling
         self.notebook = ttk.Notebook(main_frame)
-        self.notebook.pack(fill=tk.BOTH, expand=True, pady=10)
+        self.notebook.pack(fill=tk.BOTH, expand=True, pady=20)
         
-        # Create tab frames
-        self.requests_frame = ttk.Frame(self.notebook, padding=10)
+        # Create tab frames with proper padding
+        self.requests_frame = ttk.Frame(self.notebook, padding=20)
         self.notebook.add(self.requests_frame, text="Follow Requests")
         
-        self.pending_requests_frame = ttk.Frame(self.notebook, padding=10)
+        self.pending_requests_frame = ttk.Frame(self.notebook, padding=20)
         self.notebook.add(self.pending_requests_frame, text="Pending Requests")
         
-        self.non_followers_frame = ttk.Frame(self.notebook, padding=10)
+        self.non_followers_frame = ttk.Frame(self.notebook, padding=20)
         self.notebook.add(self.non_followers_frame, text="Non-Followers")
         
         # Initialize tab views
         self.requests_view = RequestsTabView(self.requests_frame, self.data_parser, self.status_var)
         self.pending_requests_view = PendingRequestsTabView(self.pending_requests_frame, self.data_parser, self.status_var)
         self.non_followers_view = NonFollowersTabView(self.non_followers_frame, self.data_parser, self.status_var)
+        
+        # Progress and status bar in Apple style
+        status_frame = ttk.Frame(main_frame)
+        status_frame.pack(fill=tk.X, side=tk.BOTTOM, pady=10)
+        
+        progress_bar = ttk.Progressbar(status_frame, orient=tk.HORIZONTAL, 
+                                      length=100, mode='determinate', 
+                                      variable=self.progress_var,
+                                      style="TProgressbar")
+        progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+        
+        status_label = ttk.Label(status_frame, textvariable=self.status_var)
+        status_label.pack(side=tk.RIGHT)
     
     def _create_file_section(self, parent):
         """
-        Create the file selection and import section.
+        Create the file selection and import section with Apple design.
         
         Args:
             parent (ttk.Frame): Parent frame to add the section to
         """
-        file_frame = ttk.LabelFrame(parent, text="Data Import", padding=10)
-        file_frame.pack(fill=tk.X, pady=5)
+        file_frame = ttk.LabelFrame(parent, text="Data Import", padding=15)
+        file_frame.pack(fill=tk.X, pady=10)
         
-        ttk.Label(file_frame, text="Select Instagram data export (.zip):").grid(row=0, column=0, sticky=tk.W, pady=5)
-        ttk.Entry(file_frame, textvariable=self.zip_path, width=50).grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
-        ttk.Button(file_frame, text="Browse", command=self.browse_zip).grid(row=0, column=2, padx=5, pady=5)
+        # Grid configuration for proper spacing
+        file_frame.columnconfigure(1, weight=1)
         
-        ttk.Label(file_frame, text="Warning: Make sure to download HTML files, not JSON,\nfrom Instagram's Download Your Information page").grid(row=1, column=0, columnspan=3, sticky=tk.W, pady=5)
-        ttk.Button(file_frame, text="Import Data", command=self.import_data).grid(row=2, column=0, columnspan=3, pady=10)
+        # File selection row
+        ttk.Label(file_frame, text="Instagram data export (.zip):").grid(row=0, column=0, sticky=tk.W, pady=10)
+        ttk.Entry(file_frame, textvariable=self.zip_path, width=50).grid(row=0, column=1, padx=10, pady=10, sticky=(tk.W, tk.E))
+        ttk.Button(file_frame, text="Choose File...", style="Secondary.TButton", command=self.browse_zip).grid(row=0, column=2, padx=10, pady=10)
+        
+        # Warning message with SF font
+        warning_label = ttk.Label(file_frame, 
+                                text="Please download HTML files (not JSON) from Instagram's 'Download Your Information' page",
+                                foreground="#FF3B30")  # Apple's red warning color
+        warning_label.grid(row=1, column=0, columnspan=3, sticky=tk.W, pady=10)
+        
+        # Button row with Apple-styled button
+        button_frame = ttk.Frame(file_frame)
+        button_frame.grid(row=2, column=0, columnspan=3, pady=15)
+        
+        ttk.Button(button_frame, text="Import Data", command=self.import_data).pack()
     
     def browse_zip(self):
         """Browse for Instagram data zip file."""
